@@ -9,6 +9,7 @@ import net.sourceforge.argparse4j.*;
 import net.sourceforge.argparse4j.inf.*;
 import java.io.IOException;
 import java.nio.file.FileSystems;
+import java.lang.System;
 import java.lang.RuntimeException;
 import java.lang.Exception;
 import java.util.Arrays;
@@ -28,25 +29,36 @@ public class GlobeSortClient {
 	private static int MAX_MESSAGE_SIZE = 100 * 1024 * 1024;
 
     private String serverStr;
+    private int numValues;
 
-    public GlobeSortClient(String ip, int port) {
+    public GlobeSortClient(String ip, int port, int num) {
         this.serverChannel = ManagedChannelBuilder.forAddress(ip, port)
 				.maxInboundMessageSize(MAX_MESSAGE_SIZE)
                 .usePlaintext(true).build();
         this.serverStub = GlobeSortGrpc.newBlockingStub(serverChannel);
 
         this.serverStr = ip + ":" + port;
+        this.numValues = num;
     }
 
     public void run(Integer[] values) throws Exception {
         System.out.println("Pinging " + serverStr + "...");
+        long pingStart = System.currentTimeMillis();
         serverStub.ping(Empty.newBuilder().build());
+        long pingEnd = System.currentTimeMillis();
         System.out.println("Ping successful.");
+        System.out.println("Latency(RTT): " + Long.toString(pingEnd-pingStart) + " ms");
 
         System.out.println("Requesting server to sort array");
         IntArray request = IntArray.newBuilder().addAllValues(Arrays.asList(values)).build();
+        long appStart = System.currentTimeMillis();
         IntArray response = serverStub.sortIntegers(request);
+        long appEnd = System.currentTimeMillis();
+        long sortT = response.getSortT();
         System.out.println("Sorted array");
+        System.out.println("Application Throughput: " + Long.toString(this.numValues/(appEnd-appStart)));
+        System.out.println("One-way Network Throughput: " + Long.toString(this.numValues/((appEnd-appStart-sortT)*2)));
+
     }
 
     public void shutdown() throws InterruptedException {
@@ -88,9 +100,10 @@ public class GlobeSortClient {
             throw new RuntimeException("Argument parsing failed");
         }
 
-        Integer[] values = genValues(cmd_args.getInt("num_values"));
+        numValues = cmd_args.getInt("num_values");
+        Integer[] values = genValues(numValues);
 
-        GlobeSortClient client = new GlobeSortClient(cmd_args.getString("server_ip"), cmd_args.getInt("server_port"));
+        GlobeSortClient client = new GlobeSortClient(cmd_args.getString("server_ip"), cmd_args.getInt("server_port"), numValues);
         try {
             client.run(values);
         } finally {
