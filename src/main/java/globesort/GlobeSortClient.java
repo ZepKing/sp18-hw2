@@ -20,6 +20,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 
 public class GlobeSortClient {
 
@@ -40,6 +42,8 @@ public class GlobeSortClient {
     }
 
     public void run(Integer[] values) throws Exception {
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); 
+        System.out.println(df.format(new Date()));  
         System.out.println("Pinging " + serverStr + "...");
         long pingStart = System.currentTimeMillis();
         serverStub.ping(Empty.newBuilder().build());
