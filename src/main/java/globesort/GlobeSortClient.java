@@ -54,8 +54,8 @@ public class GlobeSortClient {
         long appEnd = System.currentTimeMillis();
         long sortT = response.getSortT();
         System.out.println("Sorted array");
-        System.out.println("Application Throughput: " + Long.toString(values.length/(appEnd-appStart)) + " Int/s");
-        System.out.println("One-way Network Throughput: " + Long.toString((appEnd-appStart-sortT)/2) + " ms");
+        System.out.println("Application Throughput: " + Long.toString(values.length/(appEnd-appStart)) + " Int/ms");
+        System.out.println("One-way Network Throughput: " + Long.toString(values.length/((appEnd-appStart-sortT)/2)) + " Int/ms");
 
     }
 
