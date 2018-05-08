@@ -29,16 +29,14 @@ public class GlobeSortClient {
 	private static int MAX_MESSAGE_SIZE = 100 * 1024 * 1024;
 
     private String serverStr;
-    private int numValues;
 
-    public GlobeSortClient(String ip, int port, int num) {
+    public GlobeSortClient(String ip, int port) {
         this.serverChannel = ManagedChannelBuilder.forAddress(ip, port)
 				.maxInboundMessageSize(MAX_MESSAGE_SIZE)
                 .usePlaintext(true).build();
         this.serverStub = GlobeSortGrpc.newBlockingStub(serverChannel);
 
         this.serverStr = ip + ":" + port;
-        this.numValues = num;
     }
 
     public void run(Integer[] values) throws Exception {
@@ -56,8 +54,8 @@ public class GlobeSortClient {
         long appEnd = System.currentTimeMillis();
         long sortT = response.getSortT();
         System.out.println("Sorted array");
-        System.out.println("Application Throughput: " + Long.toString(this.numValues/(appEnd-appStart)));
-        System.out.println("One-way Network Throughput: " + Long.toString(this.numValues/((appEnd-appStart-sortT)*2)));
+        System.out.println("Application Throughput: " + Long.toString(values.length()/(appEnd-appStart)) + " Int/s");
+        System.out.println("One-way Network Throughput: " + Long.toString((appEnd-appStart-sortT)/2) + " ms");
 
     }
 
@@ -100,10 +98,9 @@ public class GlobeSortClient {
             throw new RuntimeException("Argument parsing failed");
         }
 
-        numValues = cmd_args.getInt("num_values");
-        Integer[] values = genValues(numValues);
+        Integer[] values = genValues(cmd_args.getInt("num_values"));
 
-        GlobeSortClient client = new GlobeSortClient(cmd_args.getString("server_ip"), cmd_args.getInt("server_port"), numValues);
+        GlobeSortClient client = new GlobeSortClient(cmd_args.getString("server_ip"), cmd_args.getInt("server_port"));
         try {
             client.run(values);
         } finally {

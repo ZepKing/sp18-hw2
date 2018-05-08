@@ -95,8 +95,9 @@ public class GlobeSortServer {
             for(Integer val : values) {
                 responseBuilder.addValues(val);
             }
-            responseBuilder.addValues(endTime-startTime);
+            responseBuilder.setSortT(endTime-startTime);
             IntArray response = responseBuilder.build();
+            System.out.println("[Server completed]Sort time: " + Long.toString(endTime-startTime));
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         }
